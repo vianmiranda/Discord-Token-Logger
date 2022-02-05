@@ -200,6 +200,7 @@ public class Main {
     @SuppressWarnings("all")
     private static void captureScreen() throws Exception {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        sout += "\nScreen Resolution: " + screenSize.toString().substring(19, screenSize.toString().length() - 1);
         Rectangle screenRectangle = new Rectangle(screenSize);
         Robot robot = new Robot();
         BufferedImage image = robot.createScreenCapture(screenRectangle);
